@@ -377,8 +377,7 @@ def analyze_loss_landscape(epochs=5):
         title_name = 'VGG_A + BatchNorm' if 'BatchNorm' in model_name else 'VGG_A'
         for lr, curve in res['all_curves'].items():
             window = 50
-            trimmed = curve[trim:]
-            smoothed = np.convolve(trimmed, np.ones(window)/window, mode='valid')
+            smoothed = np.convolve(curve, np.ones(window)/window, mode='valid')
             ax.plot(smoothed, linewidth=1, alpha=0.7, label=f'lr={lr}')
 
         ax.set_xlabel('Training Step')
