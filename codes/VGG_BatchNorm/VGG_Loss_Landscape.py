@@ -318,19 +318,20 @@ def analyze_loss_landscape(epochs=5):
     # ---- Plot: 2 subplots (raw + gap) ----
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
-    colors = {'VGG_A': ('#FF6B6B', '#FF0000'),  # red tones
-              'VGG_A_BatchNorm': ('#4ECDC4', '#008080')}  # teal tones
+    trim = 10  # skip first N steps to avoid extreme initial spikes
+
+    colors = {'VGG_A': ('#FF6B6B', '#FF0000'),
+              'VGG_A_BatchNorm': ('#4ECDC4', '#008080')}
 
     window = 50
 
-    # Draw BN first, then VGG_A so the wider area is on top
     plot_order = ['VGG_A_BatchNorm', 'VGG_A']
 
     for model_name in plot_order:
         res = landscape_results[model_name]
-        max_curve = res['max_curve']
-        min_curve = res['min_curve']
-        gap_curve = res['gap_curve']
+        max_curve = res['max_curve'][trim:]
+        min_curve = res['min_curve'][trim:]
+        gap_curve = res['gap_curve'][trim:]
         steps = range(len(max_curve))
         fill_color, line_color = colors[model_name]
 
@@ -376,7 +377,8 @@ def analyze_loss_landscape(epochs=5):
         title_name = 'VGG_A + BatchNorm' if 'BatchNorm' in model_name else 'VGG_A'
         for lr, curve in res['all_curves'].items():
             window = 50
-            smoothed = np.convolve(curve, np.ones(window)/window, mode='valid')
+            trimmed = curve[trim:]
+            smoothed = np.convolve(trimmed, np.ones(window)/window, mode='valid')
             ax.plot(smoothed, linewidth=1, alpha=0.7, label=f'lr={lr}')
 
         ax.set_xlabel('Training Step')
@@ -404,9 +406,9 @@ if __name__ == '__main__':
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=30,
+    parser.add_argument('--epochs', type=int, default=10,
                         help='Training epochs for comparison')
-    parser.add_argument('--landscape-epochs', type=int, default=30,
+    parser.add_argument('--landscape-epochs', type=int, default=10,
                         help='Training epochs for landscape analysis')
     parser.add_argument('--comparison', action='store_true',
                         help='Run VGG-A vs VGG-A+BN training comparison')
