@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# CIFAR-10 dataset 
+dataset/
+codes/data/
+
+# Model checkpoints 
+*.pth
+
+# SwanLab logs
+swanlog/
+*.swanlab
+
+# System
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/
+CLAUDE.md
+
+# IDE
+.vscode/
+.idea/
+
+# Report
+report.pdf
+report.tex
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.bbl
+project_2_2026.pdf
+project_2_2026.lyx
+
+# Archives
+*.tar.gz
+
+# Results (images and JSONs generated from experiments)
+results/
+
+# Reference images
+pic/
+
