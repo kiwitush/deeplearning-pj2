@@ -3,3 +3,4 @@ torchvision>=0.15
 numpy>=1.21
 matplotlib>=3.5
 tqdm>=4.60
+scikit-learn>=1.0
