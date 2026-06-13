@@ -1,10 +1,10 @@
 """
-可视化工具
+可视化工具 — 基于 DeepCNN Baseline (ensemble_s42.pth) 生成。
 
-- 卷积核可视化
 - 训练曲线 (loss & accuracy)
 - 实验对比柱状图
 - 混淆矩阵
+- 卷积核可视化
 """
 
 import os
@@ -204,38 +204,42 @@ def load_and_visualize_all():
     print("所有可视化已生成.")
 
 
-def generate_best_model_viz(model_path=None):
-    """用最佳 DeepCNN 模型 (ensemble_s123) 生成卷积核可视化和混淆矩阵。
-
-    用法:
-      python visualization.py --best
-      或直接调用 generate_best_model_viz()
-    """
+def _load_deepcnn_baseline(model_path=None):
+    """加载 DeepCNN Baseline (seed=42) 模型。"""
     import torch
-    from torch.utils.data import DataLoader
-    from torchvision import datasets, transforms
-
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from models import CIFAR10_DeepCNN
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     if model_path is None:
-        model_path = os.path.join(ROOT_DIR, 'best_models', 'task1', 'ensemble_s123.pth')
+        model_path = os.path.join(ROOT_DIR, 'best_models', 'task1', 'ensemble_s42.pth')
 
     model = CIFAR10_DeepCNN(
         stage_channels=(64, 128, 256, 512), stage_depths=(2, 2, 3, 1),
-        fc_units=(512, 256), dropout_p=0.1,
+        fc_units=(512, 256), activation='relu',
     )
     model.load_state_dict(torch.load(model_path, map_location=device))
     model = model.to(device).eval()
     print(f'[可视化] 已加载模型: {os.path.basename(model_path)}')
+    return model, device
 
-    # ---- 1. 卷积核可视化 (Stage 0, 第一个 ResidualBlock 的第一个 Conv) ----
+
+def generate_conv_filters(model_path=None):
+    """卷积核可视化 — DeepCNN Stage 0 第一个 Conv"""
+    model, device = _load_deepcnn_baseline(model_path)
     visualize_filters(model, layer_name='stages.0.0.conv1',
                      save_path=os.path.join(FIGS_DIR, 'conv_filters.png'))
 
-    # ---- 2. 混淆矩阵 ----
+
+def generate_confusion_matrix(model_path=None):
+    """混淆矩阵 — DeepCNN Baseline 在 CIFAR-10 测试集上"""
+    import torch
+    from torch.utils.data import DataLoader
+    from torchvision import datasets, transforms
+
+    model, device = _load_deepcnn_baseline(model_path)
+
     normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
                                      std=[0.2470, 0.2435, 0.2616])
     test_set = datasets.CIFAR10(
@@ -260,7 +264,6 @@ def generate_best_model_viz(model_path=None):
 
     plot_confusion_matrix(cm, save_path=os.path.join(FIGS_DIR, 'confusion_matrix.png'))
 
-    # 输出每类准确率供报告使用
     per_class = cm.diagonal() / cm.sum(axis=1)
     print('每类准确率:')
     for i, (name, acc) in enumerate(zip(CLASS_NAMES, per_class)):
@@ -268,8 +271,54 @@ def generate_best_model_viz(model_path=None):
     print(f'总准确率: {cm.diagonal().sum() / cm.sum():.4f}')
 
 
+def generate_training_curves():
+    """批量生成所有实验的训练曲线。"""
+    print("从实验结果生成训练曲线...")
+
+    summary_path = os.path.join(RESULTS_DIR, 'summary.json')
+    if os.path.exists(summary_path):
+        with open(summary_path) as f:
+            summary = json.load(f)
+        plot_experiment_comparison(summary, metric='test_acc',
+                                   title='Test Accuracy Comparison')
+
+    result_files = [f for f in os.listdir(RESULTS_DIR) if f.startswith('result_')]
+    if not result_files:
+        print("未找到 result_*.json 文件")
+        return
+
+    for rf in result_files:
+        path = os.path.join(RESULTS_DIR, rf)
+        with open(path) as f:
+            result = json.load(f)
+        exp_name = result['exp_name']
+        history = result['history']
+        save_path = os.path.join(FIGS_DIR, f'training_curves_{exp_name}.png')
+        plot_training_curves(history, save_path=save_path,
+                            title=f'Training Curves - {exp_name}')
+
+    print(f"已生成 {len(result_files)} 组训练曲线.")
+
+
 if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '--best':
-        generate_best_model_viz()
-    else:
-        load_and_visualize_all()
+    import argparse
+    parser = argparse.ArgumentParser(description='CIFAR-10 可视化工具')
+    parser.add_argument('--curves', action='store_true', help='批量生成训练曲线')
+    parser.add_argument('--confusion', action='store_true', help='生成混淆矩阵')
+    parser.add_argument('--conv', action='store_true', help='卷积核可视化')
+    parser.add_argument('--model-path', type=str, default=None,
+                        help='模型权重路径 (默认: ensemble_s42.pth)')
+    args = parser.parse_args()
+
+    if not (args.curves or args.confusion or args.conv):
+        parser.print_help()
+        sys.exit(0)
+
+    if args.curves:
+        generate_training_curves()
+
+    if args.confusion:
+        generate_confusion_matrix(args.model_path)
+
+    if args.conv:
+        generate_conv_filters(args.model_path)
