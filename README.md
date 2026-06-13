@@ -171,7 +171,7 @@ python tsne_visualization.py
 
 ## Task 2: Batch Normalization
 
-### VGG-A 结构 (适配 CIFAR-10: 32×32×3)
+### VGG-A 结构 (适配 CIFAR-10)
 
 8 个卷积层 + 3 个全连接层，共 11 层可学习参数。分类头基于 CIFAR-10 适配为 512→512→10。
 
@@ -209,7 +209,6 @@ python test_vgg.py --model VGG_A_BatchNorm
 ```
 
 ---
-
 
 ## 模型权重下载地址
 - 模型权重：[百度网盘](https://pan.baidu.com/s/16Ww_UgJajisZF4w9FrzlcA)（提取码：6h7g）
