@@ -41,9 +41,6 @@ project_2_2026.lyx
 # Archives
 *.tar.gz
 
-# Results (images and JSONs generated from experiments)
-results/
-
 # Reference images
 pic/
 

@@ -405,9 +405,9 @@ if __name__ == '__main__':
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=10,
+    parser.add_argument('--epochs', type=int, default=30,
                         help='Training epochs for comparison')
-    parser.add_argument('--landscape-epochs', type=int, default=10,
+    parser.add_argument('--landscape-epochs', type=int, default=30,
                         help='Training epochs for landscape analysis')
     parser.add_argument('--comparison', action='store_true',
                         help='Run VGG-A vs VGG-A+BN training comparison')
